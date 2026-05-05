@@ -1,711 +1,173 @@
 <!DOCTYPE html>
-
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام تسجيل الطلاب - ميزان أكاديمي</title>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js"></script>
+    
+    <!-- تحديث الروابط لنسخة Compat لضمان عمل الكود بشكل صحيح -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary-dark: #0d3b1f; --primary: #1a5c33; --primary-light: #2d7d47;
+            --secondary: #d4af37; --secondary-light: #e6c547; --accent: #c9a961;
+            --success: #27ae60; --light-bg: #f9f7f4; --cream: #faf8f3;
+            --dark-text: #1a1a1a; --text-light: #4a4a4a; --border: rgba(212, 175, 55, 0.25);
+            --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.12);
         }
 
-
-    :root {
-        --primary-dark: #0d3b1f;
-        --primary: #1a5c33;
-        --primary-light: #2d7d47;
-        --secondary: #d4af37;
-        --secondary-light: #e6c547;
-        --accent: #c9a961;
-        --success: #27ae60;
-        --light-bg: #f9f7f4;
-        --cream: #faf8f3;
-        --dark-text: #1a1a1a;
-        --text-light: #4a4a4a;
-        --border: rgba(212, 175, 55, 0.25);
-        --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.12);
-        --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.08);
-        --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.05);
-    }
-
-    html {
-        scroll-behavior: smooth;
-    }
-
-    body {
-        font-family: 'Almarai', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, var(--primary-light) 100%);
-        min-height: 100vh;
-        color: var(--dark-text);
-        overflow-x: hidden;
-        position: relative;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 20px;
-    }
-
-    /* Background decoration elements */
-    .bg-decoration {
-        position: fixed;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-        z-index: -2;
-        overflow: hidden;
-    }
-
-    .shape-circle {
-        position: absolute;
-        border-radius: 50%;
-        opacity: 0.08;
-    }
-
-    .shape-circle-1 {
-        width: 500px;
-        height: 500px;
-        background: var(--secondary);
-        top: -200px;
-        right: -100px;
-        animation: float 20s infinite ease-in-out;
-    }
-
-    .shape-circle-2 {
-        width: 400px;
-        height: 400px;
-        background: var(--secondary);
-        bottom: -150px;
-        left: -100px;
-        animation: float 25s infinite ease-in-out reverse;
-    }
-
-    @keyframes float {
-        0%, 100% { transform: translateY(0px) translateX(0px); }
-        50% { transform: translateY(50px) translateX(30px); }
-    }
-
-    .golden-accent {
-        position: fixed;
-        width: 2px;
-        background: linear-gradient(180deg, transparent, var(--secondary), transparent);
-        opacity: 0.3;
-        animation: shimmer 3s infinite;
-    }
-
-    .accent-1 {
-        height: 300px;
-        top: 10%;
-        right: 5%;
-    }
-
-    .accent-2 {
-        height: 250px;
-        bottom: 15%;
-        left: 3%;
-    }
-
-    @keyframes shimmer {
-        0%, 100% { opacity: 0.2; }
-        50% { opacity: 0.5; }
-    }
-
-    .container {
-        max-width: 540px;
-        width: 100%;
-        position: relative;
-        z-index: 1;
-        animation: fadeInUp 1s ease-out;
-    }
-
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(40px);
+        body {
+            font-family: 'Almarai', sans-serif;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, var(--primary-light) 100%);
+            min-height: 100vh;
+            display: flex; justify-content: center; align-items: center; padding: 20px;
+            overflow-x: hidden;
         }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
 
-    .header {
-        text-align: center;
-        margin-bottom: 50px;
-        animation: fadeInDown 1s ease-out;
-    }
+        .container { max-width: 500px; width: 100%; position: relative; z-index: 1; }
 
-    @keyframes fadeInDown {
-        from {
-            opacity: 0;
-            transform: translateY(-30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .logo-section {
-        margin-bottom: 25px;
-    }
-
-    .logo {
-        display: inline-block;
-        font-size: 4rem;
-        margin-bottom: 15px;
-        animation: bounce 2s ease-in-out infinite;
-    }
-
-    @keyframes bounce {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-10px); }
-    }
-
-    .header h1 {
-        font-size: 2.8rem;
-        font-weight: 800;
-        color: white;
-        margin-bottom: 8px;
-        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-        letter-spacing: -0.5px;
-    }
-
-    .header p {
-        font-size: 1.1rem;
-        color: rgba(255, 255, 255, 0.9);
-        font-weight: 400;
-        letter-spacing: 1px;
-        margin-bottom: 8px;
-    }
-
-    .header-line {
-        width: 80px;
-        height: 3px;
-        background: linear-gradient(90deg, var(--secondary), var(--secondary-light));
-        margin: 15px auto;
-        border-radius: 2px;
-    }
-
-    .form-card {
-        background: var(--cream);
-        padding: 50px 40px;
-        border-radius: 25px;
-        box-shadow: var(--shadow-lg);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(212, 175, 55, 0.3);
-        position: relative;
-        overflow: hidden;
-        animation: slideUp 0.8s ease-out 0.2s both;
-    }
-
-    @keyframes slideUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* Subtle pattern background */
-    .form-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-image: 
-            repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(212, 175, 55, 0.02) 10px, rgba(212, 175, 55, 0.02) 20px);
-        pointer-events: none;
-    }
-
-    .form-card > * {
-        position: relative;
-        z-index: 1;
-    }
-
-    .form-header {
-        margin-bottom: 35px;
-        padding-bottom: 25px;
-        border-bottom: 2px solid var(--border);
-    }
-
-    .form-header h2 {
-        font-size: 1.9rem;
-        color: var(--primary);
-        font-weight: 800;
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .form-header h2::before {
-        content: '';
-        width: 6px;
-        height: 30px;
-        background: linear-gradient(180deg, var(--secondary), var(--secondary-light));
-        border-radius: 3px;
-    }
-
-    .form-header p {
-        color: var(--text-light);
-        font-size: 0.95rem;
-        margin-top: 5px;
-    }
-
-    .form-group {
-        margin-bottom: 28px;
-    }
-
-    .form-group:last-of-type {
-        margin-bottom: 35px;
-    }
-
-    label {
-        display: block;
-        margin-bottom: 10px;
-        color: var(--primary);
-        font-weight: 700;
-        font-size: 1rem;
-        letter-spacing: 0.5px;
-        position: relative;
-    }
-
-    label span {
-        color: var(--secondary);
-        margin-left: 4px;
-    }
-
-    input, select {
-        width: 100%;
-        padding: 14px 18px;
-        border: 2px solid var(--border);
-        border-radius: 14px;
-        font-size: 1rem;
-        font-family: 'Almarai', inherit;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        background: white;
-        color: var(--dark-text);
-        font-weight: 500;
-    }
-
-    input::placeholder {
-        color: #b0b0b0;
-    }
-
-    input:focus, select:focus {
-        outline: none;
-        border-color: var(--secondary);
-        background: linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(212, 175, 55, 0.03));
-        box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.12);
-        transform: translateY(-2px);
-    }
-
-    select {
-        cursor: pointer;
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%231a5c33' d='M12 5L8 10 4 5' stroke='%231a5c33' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: left 14px center;
-        padding-left: 50px;
-        padding-right: 18px;
-        background-size: 18px;
-    }
-
-    select option {
-        color: var(--dark-text);
-        background: white;
-        font-weight: 500;
-    }
-
-    .button-group {
-        display: flex;
-        gap: 12px;
-    }
-
-    button {
-        flex: 1;
-        padding: 15px 30px;
-        border: none;
-        border-radius: 14px;
-        font-size: 1.05rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        font-family: 'Almarai', inherit;
-        letter-spacing: 0.5px;
-        position: relative;
-        overflow: hidden;
-        text-transform: none;
-    }
-
-    .btn-submit {
-        background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-light) 100%);
-        color: var(--primary-dark);
-        box-shadow: 0 8px 24px rgba(212, 175, 55, 0.25);
-    }
-
-    .btn-submit::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        background: rgba(255, 255, 255, 0.4);
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-        transition: width 0.6s ease, height 0.6s ease;
-    }
-
-    .btn-submit:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 12px 32px rgba(212, 175, 55, 0.35);
-    }
-
-    .btn-submit:hover::before {
-        width: 400px;
-        height: 400px;
-    }
-
-    .btn-submit:active {
-        transform: translateY(-1px);
-    }
-
-    .btn-submit:disabled {
-        opacity: 0.8;
-        cursor: not-allowed;
-        transform: none;
-    }
-
-    .btn-reset {
-        background: linear-gradient(135deg, #e8e8e8 0%, #d8d8d8 100%);
-        color: var(--primary);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        font-weight: 600;
-    }
-
-    .btn-reset:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-    }
-
-    .message {
-        padding: 16px 20px;
-        border-radius: 12px;
-        margin-bottom: 24px;
-        animation: slideDown 0.4s ease-out;
-        display: none;
-        border-right: 4px solid;
-        font-weight: 600;
-        font-size: 0.95rem;
-    }
-
-    .message.show {
-        display: block;
-    }
-
-    .message.success {
-        background: linear-gradient(135deg, rgba(39, 174, 96, 0.1), rgba(39, 174, 96, 0.05));
-        color: #1e8449;
-        border-right-color: var(--success);
-    }
-
-    .message.error {
-        background: linear-gradient(135deg, rgba(231, 76, 60, 0.1), rgba(231, 76, 60, 0.05));
-        color: #c0392b;
-        border-right-color: #e74c3c;
-    }
-
-    .input-error {
-        border-color: #e74c3c !important;
-        background: rgba(231, 76, 60, 0.04) !important;
-    }
-
-    .loading-spinner {
-        display: inline-block;
-        width: 18px;
-        height: 18px;
-        border: 3px solid rgba(26, 92, 51, 0.2);
-        border-top-color: var(--primary);
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-        margin-left: 8px;
-        vertical-align: middle;
-    }
-
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-
-    .form-footer {
-        margin-top: 28px;
-        text-align: center;
-        padding-top: 20px;
-        border-top: 1px solid var(--border);
-    }
-
-    .form-footer p {
-        font-size: 0.85rem;
-        color: var(--text-light);
-        margin: 0;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .container {
-            padding: 0 15px;
-        }
+        .header { text-align: center; margin-bottom: 30px; color: white; }
+        .logo { font-size: 4rem; margin-bottom: 10px; display: inline-block; animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
         .form-card {
-            padding: 35px 25px;
-            border-radius: 20px;
+            background: var(--cream); padding: 40px; border-radius: 25px;
+            box-shadow: var(--shadow-lg); border: 1px solid var(--border);
+            position: relative;
         }
 
-        .header h1 {
-            font-size: 2.2rem;
-        }
+        .form-header { margin-bottom: 25px; border-bottom: 2px solid var(--border); padding-bottom: 15px; }
+        .form-header h2 { color: var(--primary); font-size: 1.6rem; display: flex; align-items: center; gap: 10px; }
+        .form-header h2::before { content: ''; width: 5px; height: 25px; background: var(--secondary); border-radius: 3px; }
 
-        .header p {
-            font-size: 0.95rem;
-        }
-
-        .form-header h2 {
-            font-size: 1.5rem;
-        }
-
-        .logo {
-            font-size: 3rem;
-        }
-
-        .button-group {
-            flex-direction: column;
-        }
-
-        button {
-            width: 100%;
-        }
-
-        .shape-circle-1 {
-            width: 300px;
-            height: 300px;
-        }
-
-        .shape-circle-2 {
-            width: 250px;
-            height: 250px;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .header {
-            margin-bottom: 35px;
-        }
-
-        .form-card {
-            padding: 28px 20px;
-        }
-
-        .header h1 {
-            font-size: 1.9rem;
-        }
-
-        .form-header h2 {
-            font-size: 1.3rem;
-        }
-
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: var(--primary); font-weight: 700; }
         input, select {
-            padding: 12px 14px;
-            font-size: 16px;
+            width: 100%; padding: 12px 15px; border: 2px solid var(--border);
+            border-radius: 12px; font-family: inherit; transition: 0.3s;
         }
+        input:focus, select:focus { outline: none; border-color: var(--secondary); box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1); }
 
-        label {
-            font-size: 0.95rem;
+        .btn-submit {
+            width: 100%; padding: 15px; border: none; border-radius: 12px;
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+            color: var(--primary-dark); font-weight: 800; cursor: pointer; transition: 0.3s;
         }
-    }
-</style>
+        .btn-submit:hover { transform: translateY(-2px); opacity: 0.9; }
+        .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
 
+        .message {
+            padding: 15px; border-radius: 10px; margin-bottom: 20px;
+            display: none; font-weight: 700; text-align: center;
+        }
+        .message.show { display: block; }
+        .message.success { background: #d4edda; color: #155724; }
+        .message.error { background: #f8d7da; color: #721c24; }
 
+        .loading-spinner {
+            width: 18px; height: 18px; border: 3px solid rgba(0,0,0,0.1);
+            border-top-color: var(--primary); border-radius: 50%;
+            animation: spin 0.8s linear infinite; display: inline-block; margin-right: 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
 </head>
 <body>
-    <!-- Background decorations -->
-    <div class="bg-decoration">
-        <div class="shape-circle shape-circle-1"></div>
-        <div class="shape-circle shape-circle-2"></div>
-        <div class="golden-accent accent-1"></div>
-        <div class="golden-accent accent-2"></div>
-    </div>
-
 
 <div class="container">
-    <!-- Header -->
     <div class="header">
-        <div class="logo-section">
-            <div class="logo">⚖️</div>
-        </div>
+        <div class="logo">⚖️</div>
         <h1>ميزان أكاديمي</h1>
-        <p>منصة تعليمية متقدمة</p>
-        <div class="header-line"></div>
+        <p>الرادار التعليمي الأول في العراق</p>
     </div>
 
-    <!-- Registration Form -->
     <div class="form-card">
         <div class="form-header">
             <h2>تسجيل طالب جديد</h2>
-            <p>أدخل بيانات الطالب لإكمال التسجيل</p>
         </div>
 
         <div id="message" class="message"></div>
 
         <form id="registrationForm">
             <div class="form-group">
-                <label for="studentName">
-                    اسم الطالب
-                    <span>*</span>
-                </label>
-                <input 
-                    type="text" 
-                    id="studentName" 
-                    placeholder="أدخل الاسم الكامل للطالب" 
-                    required
-                    autocomplete="name"
-                >
+                <label>اسم الطالب الكامل <span>*</span></label>
+                <input type="text" id="studentName" placeholder="مثال: أحمد علي حسين" required>
             </div>
 
             <div class="form-group">
-                <label for="studentBranch">
-                    الفرع الدراسي
-                    <span>*</span>
-                </label>
+                <label>الفرع الدراسي <span>*</span></label>
                 <select id="studentBranch" required>
                     <option value="">-- اختر الفرع --</option>
-                    <option value="علمي">سادس علمي (العلوم)</option>
-                    <option value="أدبي">سادس أدبي (الآداب)</option>
+                    <option value="علمي">سادس علمي</option>
+                    <option value="أدبي">سادس أدبي</option>
                 </select>
             </div>
 
-            <div class="button-group">
-                <button type="submit" class="btn-submit">
-                    <span id="btnText">تسجيل الآن</span>
-                    <span id="spinner"></span>
-                </button>
-                <button type="reset" class="btn-reset">إعادة تعيين</button>
-            </div>
+            <button type="submit" class="btn-submit" id="submitBtn">
+                <span id="btnText">إرسال البيانات</span>
+            </button>
         </form>
-
-        <div class="form-footer">
-            <p> Mizan Academy IQ</p>
-        </div>
     </div>
 </div>
 
 <script>
-    // Firebase Configuration - عدّل هذا بـ بيانات مشروعك
-const firebaseConfig = {
-  apiKey: "AIzaSyAh5y_SsMjRB4c2EjTKyfohOZ6nwpPogkU",
-  authDomain: "mizam-30a24.firebaseapp.com",
-  databaseURL: "https://mizam-30a24-default-rtdb.firebaseio.com",
-  projectId: "mizam-30a24",
-  storageBucket: "mizam-30a24.firebasestorage.app",
-  messagingSenderId: "73954952462",
-  appId: "1:73954952462:web:19dc91c40b6c39498d035f",
-  measurementId: "G-G41PPG7L74"
-};
+    // الإعدادات مالتك
+    const firebaseConfig = {
+        apiKey: "AIzaSyAh5y_SsMjRB4c2EjTKyfohOZ6nwpPogkU",
+        authDomain: "mizam-30a24.firebaseapp.com",
+        databaseURL: "https://mizam-30a24-default-rtdb.firebaseio.com",
+        projectId: "mizam-30a24",
+        storageBucket: "mizam-30a24.firebasestorage.app",
+        messagingSenderId: "73954952462",
+        appId: "1:73954952462:web:19dc91c40b6c39498d035f",
+        measurementId: "G-G41PPG7L74"
+    };
 
-    // Initialize Firebase
+    // تهيئة Firebase بالنمط المتوافق
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    function showMessage(msg, type = 'success') {
-        const msgDiv = document.getElementById('message');
-        msgDiv.className = `message show ${type}`;
-        msgDiv.innerHTML = type === 'success' 
-            ? `✓ ${msg}`
-            : `❌ ${msg}`;
-        
-        setTimeout(() => {
-            msgDiv.classList.remove('show');
-        }, 4000);
-    }
+    const form = document.getElementById('registrationForm');
+    const msgDiv = document.getElementById('message');
+    const btn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
 
-    function setButtonLoading(loading) {
-        const btn = document.querySelector('.btn-submit');
-        const btnText = document.getElementById('btnText');
-        const spinner = document.getElementById('spinner');
-
-        if (loading) {
-            btn.disabled = true;
-            btnText.textContent = 'جاري التسجيل';
-            spinner.innerHTML = '<span class="loading-spinner"></span>';
-        } else {
-            btn.disabled = false;
-            btnText.textContent = 'تسجيل الآن';
-            spinner.innerHTML = '';
-        }
-    }
-
-    // Form submission
-    document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
-
+        
         const name = document.getElementById('studentName').value.trim();
         const branch = document.getElementById('studentBranch').value;
 
-        // Validation
-        if (!name || !branch) {
-            showMessage('الرجاء ملء جميع الحقول المطلوبة', 'error');
-            return;
-        }
-
-        if (name.length < 3) {
-            showMessage('الاسم يجب أن يكون 3 أحرف على الأقل', 'error');
-            document.getElementById('studentName').classList.add('input-error');
-            return;
-        }
-
-        setButtonLoading(true);
+        // تعطيل الزر ومنع تكرار النقرات
+        btn.disabled = true;
+        btnText.innerHTML = '<span class="loading-spinner"></span> جاري الحفظ...';
 
         try {
-            // Save to Firebase
             await db.collection('students').add({
                 name: name,
                 branch: branch,
-                registeredAt: new Date(),
-                timestamp: new Date().toISOString()
+                registeredAt: firebase.firestore.FieldValue.serverTimestamp() // أفضل للتوقيت
             });
 
-            showMessage('تم تسجيل الطالب بنجاح!', 'success');
-            document.getElementById('registrationForm').reset();
-            
-            // Optional: Scroll to top to show the success message
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // نجاح
+            msgDiv.textContent = "تم تسجيل الطالب بنجاح في ميزان!";
+            msgDiv.className = "message show success";
+            form.reset();
         } catch (error) {
-            console.error('Error:', error);
-            showMessage('حدث خطأ في التسجيل. تأكد من إعدادات Firebase', 'error');
+            console.error(error);
+            msgDiv.textContent = "حدث خطأ! تأكد من إعدادات Rules في Firestore.";
+            msgDiv.className = "message show error";
         } finally {
-            setButtonLoading(false);
+            btn.disabled = false;
+            btnText.textContent = "إرسال البيانات";
+            setTimeout(() => msgDiv.className = "message", 5000);
         }
     });
-
-    // Clear input error on focus
-    document.querySelectorAll('input, select').forEach(el => {
-        el.addEventListener('focus', function() {
-            this.classList.remove('input-error');
-        });
-    });
 </script>
-
 
 </body>
 </html>
